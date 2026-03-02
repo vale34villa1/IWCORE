@@ -3,225 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IWCORE™ | Advanced Safety Interface</title>
+    <title>IWCORE™ | Workforce Safety & SST</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --action-blue: #3b82f6;   /* Objects */
-            --warning-gold: #fbbf24;   /* Locations */
-            --critical-red: #ef4444;   /* Hazards */
-            --bg-deep: #020617;
-        }
-
-        body {
-            font-family: 'JetBrains Mono', monospace;
-            background-color: var(--bg-deep);
-            color: #f8fafc;
-            overflow: hidden;
-            height: 100vh;
-        }
-
+        :root { --blue: #3b82f6; --gold: #fbbf24; --red: #ef4444; --safe: #10b981; --bg: #020617; }
+        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
         .font-tech { font-family: 'Orbitron', sans-serif; }
-
-        /* HUD Visual Layers */
-        .hud-viewport {
-            position: relative;
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            background: #000;
-            border-radius: 1.5rem;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .scanline {
-            width: 100%; height: 2px;
-            background: rgba(59, 130, 246, 0.1);
-            position: absolute; animation: scan 3s linear infinite; z-index: 10;
-        }
-        @keyframes scan { from { top: 0%; } to { top: 100%; } }
-
-        /* Tactical Chromatic HUD */
-        .box-obj { border: 2px solid var(--action-blue); color: var(--action-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
-        .box-loc { border: 2px solid var(--warning-gold); color: var(--warning-gold); box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
-        .box-hazard { 
-            border: 4px solid var(--critical-red); 
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--critical-red);
-            box-shadow: 0 0 30px var(--critical-red);
-            animation: alert-pulse 0.8s infinite;
-        }
-
-        @keyframes alert-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-
-        /* Ledger Styling */
-        .ledger-card {
-            border-left: 4px solid var(--action-blue);
-            background: rgba(59, 130, 246, 0.03);
-            transition: transform 0.2s ease;
-        }
-        .ledger-card-danger {
-            border-left: 4px solid var(--critical-red);
-            background: rgba(239, 68, 68, 0.08);
-        }
-
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
         
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--action-blue); border-radius: 10px; }
+        /* Tactical HUD Colors */
+        .hud-obj { border: 2px solid var(--blue); color: var(--blue); }
+        .hud-zone { border: 2px solid var(--gold); color: var(--gold); }
+        .hud-danger { border: 3px solid var(--red); box-shadow: 0 0 20px var(--red); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .section { display: none; height: 100%; animation: fadeIn 0.4s ease; }
+        .section.active { display: flex; flex-direction: column; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="flex flex-col">
+<body class="h-screen flex flex-col md:flex-row">
 
-    <div id="auth-layer" class="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-6">
-        <div class="glass p-12 rounded-[2.5rem] border border-blue-500/20 w-full max-w-md shadow-2xl text-center">
-            <div class="mb-8">
-                <h1 class="font-tech text-4xl text-blue-500 tracking-tighter">IWCORE</h1>
-                <p class="text-[9px] text-gray-500 tracking-[0.6em] uppercase mt-2">Cognitive Industrial Safety</p>
-            </div>
-            
-            <div class="space-y-4">
-                <input type="text" id="operator-id" placeholder="ENTER OPERATOR ID" class="w-full bg-black/40 border border-slate-800 p-4 rounded-2xl text-sm focus:border-blue-500 outline-none transition-all text-center tracking-widest uppercase">
-                <button onclick="initializeCore()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-tech text-sm tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-blue-900/30">
-                    START PROTOCOL
-                </button>
-            </div>
-            <p class="mt-10 text-[8px] text-slate-600 uppercase tracking-widest font-bold">Interwinners Global Architecture v4.0</p>
+    <div id="reg-screen" class="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-6">
+        <div class="glass p-10 rounded-[2.5rem] w-full max-w-md text-center shadow-2xl border-blue-500/20">
+            <h1 class="font-tech text-3xl text-blue-500 mb-2">IWCORE</h1>
+            <p class="text-[9px] text-gray-500 tracking-[0.5em] mb-10 uppercase">SST Integration Protocol</p>
+            <input type="text" id="reg-name" placeholder="FULL NAME" class="w-full bg-black/50 border border-slate-800 p-4 rounded-xl mb-4 focus:border-blue-500 outline-none text-sm text-center">
+            <input type="text" id="reg-id" placeholder="WORKER_ID" class="w-full bg-black/50 border border-slate-800 p-4 rounded-xl mb-8 focus:border-blue-500 outline-none text-sm text-center">
+            <button onclick="handleReg()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-tech tracking-widest transition-all shadow-lg shadow-blue-900/40">REGISTER & SIGN IN</button>
         </div>
     </div>
 
-    <header class="p-5 border-b border-white/5 glass flex justify-between items-center z-50">
-        <div class="flex items-center space-x-4">
-            <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_#3b82f6]"></div>
-            <h2 class="font-tech text-[10px] tracking-[0.3em] text-blue-400">IWCORE // TACTICAL_FEED_LIVE</h2>
-        </div>
-        <div class="flex items-center space-x-8">
-            <div class="text-right">
-                <p class="text-[8px] text-slate-500 uppercase">Current Ops</p>
-                <p id="active-user" class="font-tech text-xs text-blue-400">---</p>
-            </div>
-            <div id="clock" class="font-tech text-lg text-white">00:00:00</div>
-        </div>
-    </header>
+    <nav id="nav-bar" class="hidden w-full md:w-24 bg-black/80 md:flex flex-row md:flex-col items-center justify-around md:justify-start py-8 gap-10 border-r border-white/5 z-50">
+        <button onclick="nav('profile')" class="text-2xl hover:scale-110 transition">👤</button>
+        <button onclick="nav('camera')" class="text-2xl hover:scale-110 transition">📷</button>
+        <button onclick="nav('agent')" class="text-2xl hover:scale-110 transition">🤖</button>
+    </nav>
 
-    <main class="flex-1 grid grid-cols-12 gap-8 p-8 overflow-hidden">
+    <main id="main-ui" class="hidden flex-1 p-6 md:p-10 overflow-hidden">
         
-        <div class="col-span-8 flex flex-col space-y-6">
-            <div class="hud-viewport flex-1 shadow-2xl border border-white/5">
-                <video id="core-feed" autoplay muted playsinline class="w-full h-full object-cover opacity-60"></video>
-                <div class="scanline"></div>
+        <section id="profile" class="section active">
+            <header class="mb-8">
+                <p class="text-[10px] text-blue-500 font-tech">WORKER_PROFILE</p>
+                <h2 id="display-name" class="text-3xl font-bold">---</h2>
+            </header>
 
-                <div class="absolute top-1/4 left-20 box-obj p-4 rounded-xl bg-blue-950/20 backdrop-blur-sm">
-                    <p class="text-[8px] font-bold uppercase">Object_Recognition</p>
-                    <p class="font-tech text-xs mt-1">INDUSTRIAL_UNIT_09</p>
-                    <div class="mt-2 h-1 w-full bg-blue-900/40 rounded overflow-hidden">
-                        <div class="h-full bg-blue-400 w-3/4"></div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="font-tech text-xs mb-6 text-slate-400">PPE CHECKLIST (SAFETY CONTROL)</h3>
+                    <div class="space-y-4" id="ppe-list">
+                        </div>
+                </div>
+
+                <div class="glass p-6 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-tech text-xs mb-4 text-slate-400">OPERATIONAL MODE</h3>
+                        <div class="flex gap-4">
+                            <button onclick="setHeight('LOW')" id="btn-low" class="flex-1 py-3 rounded-xl border border-blue-500 bg-blue-500/20 text-xs font-bold">GROUND LEVEL</button>
+                            <button onclick="setHeight('HIGH')" id="btn-high" class="flex-1 py-3 rounded-xl border border-slate-700 text-xs font-bold">HIGH ALTITUDE</button>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 rounded-2xl bg-white/5 border border-white/5">
+                        <p class="text-[10px] text-slate-500 uppercase">Current Safety Status</p>
+                        <p id="safety-status" class="text-xl font-bold text-safe">READY_FOR_DUTY</p>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <div class="absolute bottom-40 right-20 box-loc p-4 rounded-xl bg-yellow-950/20 backdrop-blur-sm">
-                    <p class="text-[8px] font-bold uppercase">Location_Tag</p>
-                    <p class="font-tech text-xs mt-1">SECTOR_B_ASSEMBLY</p>
+        <section id="camera" class="section">
+            <div id="cam-blocker" class="absolute inset-0 z-50 glass flex flex-col items-center justify-center text-center p-10 hidden">
+                <p class="text-5xl mb-4">⚠️</p>
+                <h2 class="font-tech text-2xl text-red-500">SAFETY BLOCKADE</h2>
+                <p class="text-sm text-slate-400 mt-2 max-w-sm">High altitude mode requires <b>HARNESS</b> verification in your profile before activation.</p>
+                <button onclick="nav('profile')" class="mt-6 px-8 py-3 bg-red-600 rounded-full font-bold text-xs">GO TO PROFILE</button>
+            </div>
+
+            <div class="relative flex-1 rounded-[2.5rem] overflow-hidden bg-black border border-white/10">
+                <video id="feed" autoplay muted playsinline class="w-full h-full object-cover opacity-60"></video>
+                
+                <div class="absolute top-10 left-10 hud-obj p-3 bg-blue-500/10 rounded-xl backdrop-blur-md">
+                    <p class="text-[8px] font-bold">OBJECT_ID</p>
+                    <p class="font-tech text-xs">MACHINERY_A12</p>
                 </div>
+                <div class="absolute top-10 right-10 hud-zone p-3 bg-gold-500/10 rounded-xl backdrop-blur-md">
+                    <p class="text-[8px] font-bold">LOCATION_TAG</p>
+                    <p class="font-tech text-xs">SECTOR_4_HIGH</p>
+                </div>
+                
+                <div class="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 py-3 bg-black/80 rounded-full border border-white/20 text-center">
+                    <p class="text-xs italic"><span class="text-blue-500 font-bold">SST TIP:</span> Always maintain 3 points of contact when climbing.</p>
+                </div>
+            </div>
+        </section>
 
-                <div id="hazard-alert" class="hidden absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                    <div class="box-hazard p-12 rounded-3xl text-center bg-black/40 backdrop-blur-md">
-                        <p class="font-tech text-4xl mb-4">HAZARD_DETECTED</p>
-                        <p class="text-xs uppercase tracking-[0.4em] opacity-80">Immediate Personnel Proximity Alert</p>
+        <section id="agent" class="section">
+            <div class="max-w-3xl mx-auto w-full bg-slate-900/50 p-10 rounded-[3rem] border border-white/5">
+                <div class="flex items-center gap-6 mb-8">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-blue-900/40">🤖</div>
+                    <div>
+                        <h2 class="font-tech text-xl text-blue-400">SAFEBOT AGENT</h2>
+                        <p class="text-xs text-slate-500 tracking-widest">AUTONOMOUS HEALTH & SAFETY MENTOR</p>
                     </div>
                 </div>
-            </div>
-
-            <div class="flex justify-between items-center glass p-6 rounded-3xl border border-white/5 shadow-xl">
-                <div>
-                    <p class="font-tech text-[10px] text-blue-400">Cognitive AI Status</p>
-                    <p class="text-xs text-slate-400 mt-1">Predicting operational risks based on spatial telemetry...</p>
+                <div class="space-y-6 text-slate-300 leading-relaxed">
+                    <p class="bg-white/5 p-6 rounded-2xl border-l-4 border-blue-500">
+                        "Hello, I am your SafeBot. Based on your current assignment in <b>Sector 4</b>, I have updated your training modules. Your <b>Family Health Insurance (SCTR)</b> is active and covers pediatric care for your children while you are on duty."
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 bg-black/40 rounded-2xl border border-white/5">
+                            <p class="text-[10px] text-blue-500 font-bold mb-1">HEALTH TIPS</p>
+                            <p class="text-xs">Avoid using headphones; ambient awareness is life-saving.</p>
+                        </div>
+                        <div class="p-4 bg-black/40 rounded-2xl border border-white/5">
+                            <p class="text-[10px] text-gold-500 font-bold mb-1">FAMILY BENEFIT</p>
+                            <p class="text-xs">Access safe-housing subsidies for qualified workers.</p>
+                        </div>
+                    </div>
+                    <button class="w-full bg-blue-600 py-4 rounded-2xl font-tech text-xs tracking-widest">START FALL PREVENTION TRAINING</button>
                 </div>
-                <button onclick="triggerHazard()" class="bg-red-600/10 border border-red-600/50 text-red-500 px-10 py-3 rounded-2xl font-tech text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-95">
-                    TEST_HAZARD_PROTOCOL
-                </button>
             </div>
-        </div>
-
-        <div class="col-span-4 flex flex-col h-full">
-            <div class="flex items-center justify-between mb-6 px-2">
-                <h3 class="font-tech text-[10px] text-slate-400 tracking-[0.3em] uppercase">■ Safety Blockchain Ledger</h3>
-                <span class="text-[8px] text-blue-500 font-bold px-2 py-1 bg-blue-500/10 rounded">ENCRYPTED_LINK</span>
-            </div>
-            
-            <div id="ledger-stream" class="flex-1 overflow-y-auto space-y-4 pr-3 custom-scrollbar">
-                </div>
-        </div>
+        </section>
     </main>
 
+    <div id="modal" class="fixed inset-0 z-[200] bg-black/90 hidden flex items-center justify-center p-6 backdrop-blur-sm">
+        <div class="glass p-10 rounded-[2.5rem] max-w-md w-full border-blue-500/20">
+            <h3 id="modal-title" class="font-tech text-xl text-blue-400 mb-4">---</h3>
+            <div class="space-y-4 text-sm text-slate-300">
+                <p id="modal-benefit"><b class="text-white">Benefits:</b> ---</p>
+                <p id="modal-usage"><b class="text-white">Proper Use:</b> ---</p>
+                <p id="modal-risk" class="text-red-400 font-bold uppercase text-[10px]">Avoid mobile phone use while equipped.</p>
+            </div>
+            <button onclick="closeModal()" class="mt-8 w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all">CLOSE MANUAL</button>
+        </div>
+    </div>
+
     <script>
-        let currentOperator = "";
-        const ledgerContainer = document.getElementById('ledger-stream');
-        const videoElement = document.getElementById('core-feed');
-        const alertUI = document.getElementById('hazard-alert');
+        const worker = { name: "", id: "", height: "LOW", ppe: {
+            "Helmet": { status: false, benefit: "Prevents traumatic brain injury from falling objects.", usage: "Adjust chin strap so only two fingers fit between strap and chin." },
+            "Gloves": { status: false, benefit: "Protects against abrasions and electric shocks.", usage: "Inspect for holes or worn-out patches before every shift." },
+            "Harness": { status: false, benefit: "Stops free-falls. Essential for work over 1.8m.", usage: "Ensure D-ring is centered between shoulder blades." }
+        }};
 
-        function initializeCore() {
-            const idInput = document.getElementById('operator-id').value;
-            if(idInput.length >= 4) {
-                currentOperator = idInput.toUpperCase();
-                document.getElementById('auth-layer').classList.add('hidden');
-                document.getElementById('active-user').innerText = currentOperator;
-                
-                // Start Camera and Genesis Block
-                startCameraFeed();
-                pushToLedger('GENESIS_AUTHENTICATION');
+        function handleReg() {
+            const name = document.getElementById('reg-name').value;
+            const id = document.getElementById('reg-id').value;
+            if(name.length > 3 && id.length > 3) {
+                worker.name = name; worker.id = id;
+                document.getElementById('reg-screen').classList.add('hidden');
+                document.getElementById('nav-bar').classList.remove('hidden');
+                document.getElementById('main-ui').classList.remove('hidden');
+                document.getElementById('display-name').innerText = name.toUpperCase();
+                renderPPE();
+            }
+        }
+
+        function renderPPE() {
+            const list = document.getElementById('ppe-list');
+            list.innerHTML = "";
+            Object.keys(worker.ppe).forEach(item => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5";
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <input type="checkbox" onchange="togglePPE('${item}')" ${worker.ppe[item].status ? 'checked' : ''} class="w-5 h-5 accent-blue-500">
+                        <span class="text-sm font-semibold">${item}</span>
+                    </div>
+                    <button onclick="showManual('${item}')" class="text-[10px] text-blue-400 font-bold hover:underline">GUIDE</button>
+                `;
+                list.appendChild(div);
+            });
+            checkSafety();
+        }
+
+        function togglePPE(item) {
+            worker.ppe[item].status = !worker.ppe[item].status;
+            checkSafety();
+        }
+
+        function setHeight(mode) {
+            worker.height = mode;
+            document.getElementById('btn-low').className = mode === 'LOW' ? 'flex-1 py-3 rounded-xl border border-blue-500 bg-blue-500/20 text-xs font-bold' : 'flex-1 py-3 rounded-xl border border-slate-700 text-xs font-bold';
+            document.getElementById('btn-high').className = mode === 'HIGH' ? 'flex-1 py-3 rounded-xl border border-blue-500 bg-blue-500/20 text-xs font-bold' : 'flex-1 py-3 rounded-xl border border-slate-700 text-xs font-bold';
+            checkSafety();
+        }
+
+        function checkSafety() {
+            const statusLabel = document.getElementById('safety-status');
+            const blocker = document.getElementById('cam-blocker');
+            
+            const isHighUnsafe = worker.height === 'HIGH' && !worker.ppe['Harness'].status;
+            
+            if (isHighUnsafe) {
+                statusLabel.innerText = "CRITICAL_HAZARD_BLOCKED";
+                statusLabel.className = "text-xl font-bold text-red-500";
+                blocker.classList.remove('hidden');
             } else {
-                alert("ACCESS DENIED: Enter valid Operator credentials.");
+                statusLabel.innerText = "READY_FOR_DUTY";
+                statusLabel.className = "text-xl font-bold text-emerald-500";
+                blocker.classList.add('hidden');
             }
         }
 
-        async function startCameraFeed() {
+        function showManual(item) {
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal-title').innerText = item.toUpperCase();
+            document.getElementById('modal-benefit').innerHTML = `<b class="text-white">Benefits:</b> ${worker.ppe[item].benefit}`;
+            document.getElementById('modal-usage').innerHTML = `<b class="text-white">Proper Use:</b> ${worker.ppe[item].usage}`;
+        }
+
+        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        function nav(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'camera') startCam();
+        }
+
+        async function startCam() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                videoElement.srcObject = stream;
-            } catch (err) {
-                console.error("Camera access restricted. Using tactical simulation mode.");
-            }
+                const stream = await navigator.mediaDevices.getUserMedia({video: true});
+                document.getElementById('feed').srcObject = stream;
+            } catch(e) {}
         }
-
-        function pushToLedger(eventType) {
-            const isCritical = eventType.includes('HAZARD');
-            const blockHash = Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('');
-            const timestamp = new Date().toLocaleTimeString();
-
-            const block = document.createElement('div');
-            block.className = `p-5 rounded-2xl transition-all duration-500 border border-white/5 animate-in slide-in-from-right ${isCritical ? 'ledger-card-danger' : 'ledger-card'}`;
-            
-            block.innerHTML = `
-                <div class="flex justify-between items-start mb-2">
-                    <p class="font-tech text-[10px] ${isCritical ? 'text-red-500' : 'text-blue-400'}">${eventType}</p>
-                    <span class="text-[8px] text-slate-600 font-bold tracking-tighter">${timestamp}</span>
-                </div>
-                <p class="text-[9px] text-slate-500 break-all font-mono opacity-50">SHA-256: ${blockHash}</p>
-                <div class="flex justify-between mt-4 items-center">
-                    <span class="text-[7px] text-slate-400 uppercase tracking-widest">Verified by ${currentOperator}</span>
-                    <div class="w-1.5 h-1.5 rounded-full ${isCritical ? 'bg-red-500' : 'bg-blue-500'}"></div>
-                </div>
-            `;
-            ledgerContainer.prepend(block);
-        }
-
-        function triggerHazard() {
-            alertUI.classList.remove('hidden');
-            pushToLedger('CRITICAL_HAZARD_LOG');
-            
-            // Auto-clear after 3.5 seconds
-            setTimeout(() => {
-                alertUI.classList.add('hidden');
-                pushToLedger('AREA_RESTORED_SAFE');
-            }, 3500);
-        }
-
-        // Live Clock
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }, 1000);
     </script>
 </body>
 </html>
