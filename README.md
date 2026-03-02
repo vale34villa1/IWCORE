@@ -23,6 +23,11 @@ Unlike traditional reactive safety measures, **IWCORE** operates as an autonomou
 ## 🌐 Vision
 Our mission is to transform industrial safety from a static compliance requirement into a scalable, intelligent asset. **IWCORE** empowers the global workforce to operate in complex environments with unprecedented clarity and security.
 
+## 🛠️ Installation & Usage
+1. Clone the repo: `git clone https://github.com/YOUR_USER/IWCORE-Safety-Intelligence.git`
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run the engine: `python IWCORE_Alpha.py`
+
 ---
 ### **Interwinners**
 *An interdisciplinary collective focused on the intersection of Safety and Artificial Intelligence.*
