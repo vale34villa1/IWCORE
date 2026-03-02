@@ -1,147 +1,227 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IWCORE™ | Cognitive Safety Interface</title>
+    <title>IWCORE™ | Advanced Safety Interface</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --primary: #3b82f6; --safe: #10b981; --danger: #ef4444; }
-        body { font-family: 'Rajdhani', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
+        :root {
+            --action-blue: #3b82f6;   /* Objects */
+            --warning-gold: #fbbf24;   /* Locations */
+            --critical-red: #ef4444;   /* Hazards */
+            --bg-deep: #020617;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-deep);
+            color: #f8fafc;
+            overflow: hidden;
+            height: 100vh;
+        }
+
         .font-tech { font-family: 'Orbitron', sans-serif; }
-        
-        /* Escudo Cromático AR */
-        #ar-shield {
-            position: absolute;
-            inset: 0;
-            border: 12px solid var(--safe);
-            box-shadow: inset 0 0 30px var(--safe);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
-            z-index: 20;
+
+        /* HUD Visual Layers */
+        .hud-viewport {
+            position: relative;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: #000;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-        .shield-danger { border-color: var(--danger) !important; box-shadow: inset 0 0 60px var(--danger) !important; }
-        
-        .glass-panel { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+
         .scanline {
-            width: 100%; height: 2px; background: rgba(59, 130, 246, 0.2);
-            position: absolute; animation: scan 3s linear infinite; z-index: 21;
+            width: 100%; height: 2px;
+            background: rgba(59, 130, 246, 0.1);
+            position: absolute; animation: scan 3s linear infinite; z-index: 10;
         }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        @keyframes scan { from { top: 0%; } to { top: 100%; } }
+
+        /* Tactical Chromatic HUD */
+        .box-obj { border: 2px solid var(--action-blue); color: var(--action-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        .box-loc { border: 2px solid var(--warning-gold); color: var(--warning-gold); box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); }
+        .box-hazard { 
+            border: 4px solid var(--critical-red); 
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--critical-red);
+            box-shadow: 0 0 30px var(--critical-red);
+            animation: alert-pulse 0.8s infinite;
+        }
+
+        @keyframes alert-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+        /* Ledger Styling */
+        .ledger-card {
+            border-left: 4px solid var(--action-blue);
+            background: rgba(59, 130, 246, 0.03);
+            transition: transform 0.2s ease;
+        }
+        .ledger-card-danger {
+            border-left: 4px solid var(--critical-red);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--action-blue); border-radius: 10px; }
     </style>
 </head>
-<body>
+<body class="flex flex-col">
 
-    <header class="p-6 flex justify-between items-center glass-panel sticky top-0 z-50">
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-blue-600 rounded-sm rotate-45 flex items-center justify-center">
-                <span class="text-white font-bold -rotate-45">IW</span>
+    <div id="auth-layer" class="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-6">
+        <div class="glass p-12 rounded-[2.5rem] border border-blue-500/20 w-full max-w-md shadow-2xl text-center">
+            <div class="mb-8">
+                <h1 class="font-tech text-4xl text-blue-500 tracking-tighter">IWCORE</h1>
+                <p class="text-[9px] text-gray-500 tracking-[0.6em] uppercase mt-2">Cognitive Industrial Safety</p>
             </div>
-            <h1 class="font-tech text-xl tracking-[0.2em] text-blue-400">IWCORE <span class="text-white text-xs opacity-50">ALPHA v1.0</span></h1>
+            
+            <div class="space-y-4">
+                <input type="text" id="operator-id" placeholder="ENTER OPERATOR ID" class="w-full bg-black/40 border border-slate-800 p-4 rounded-2xl text-sm focus:border-blue-500 outline-none transition-all text-center tracking-widest uppercase">
+                <button onclick="initializeCore()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-tech text-sm tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-blue-900/30">
+                    START PROTOCOL
+                </button>
+            </div>
+            <p class="mt-10 text-[8px] text-slate-600 uppercase tracking-widest font-bold">Interwinners Global Architecture v4.0</p>
         </div>
-        <div class="hidden md:flex space-x-8 text-sm uppercase tracking-widest text-gray-400">
-            <a href="#" class="hover:text-blue-400">Architecture</a>
-            <a href="#" class="hover:text-blue-400">Ledger</a>
-            <a href="#" class="text-blue-500 border-b border-blue-500">Live Demo</a>
+    </div>
+
+    <header class="p-5 border-b border-white/5 glass flex justify-between items-center z-50">
+        <div class="flex items-center space-x-4">
+            <div class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_#3b82f6]"></div>
+            <h2 class="font-tech text-[10px] tracking-[0.3em] text-blue-400">IWCORE // TACTICAL_FEED_LIVE</h2>
+        </div>
+        <div class="flex items-center space-x-8">
+            <div class="text-right">
+                <p class="text-[8px] text-slate-500 uppercase">Current Ops</p>
+                <p id="active-user" class="font-tech text-xs text-blue-400">---</p>
+            </div>
+            <div id="clock" class="font-tech text-lg text-white">00:00:00</div>
         </div>
     </header>
 
-    <main class="container mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <main class="flex-1 grid grid-cols-12 gap-8 p-8 overflow-hidden">
         
-        <div class="lg:col-span-8 flex flex-col space-y-4">
-            <div class="relative bg-black rounded-xl overflow-hidden shadow-2xl border border-gray-800 h-[600px]">
-                <video id="webcam" autoplay muted playsinline class="w-full h-full object-cover grayscale-[30%]"></video>
-                <div id="ar-shield"></div>
+        <div class="col-span-8 flex flex-col space-y-6">
+            <div class="hud-viewport flex-1 shadow-2xl border border-white/5">
+                <video id="core-feed" autoplay muted playsinline class="w-full h-full object-cover opacity-60"></video>
                 <div class="scanline"></div>
-                
-                <div class="absolute top-6 left-6 z-30">
-                    <div id="status-badge" class="bg-emerald-500/20 border border-emerald-500 text-emerald-400 px-4 py-1 font-tech text-xs tracking-tighter">
-                        ● SYSTEM_READY: MONITORING
+
+                <div class="absolute top-1/4 left-20 box-obj p-4 rounded-xl bg-blue-950/20 backdrop-blur-sm">
+                    <p class="text-[8px] font-bold uppercase">Object_Recognition</p>
+                    <p class="font-tech text-xs mt-1">INDUSTRIAL_UNIT_09</p>
+                    <div class="mt-2 h-1 w-full bg-blue-900/40 rounded overflow-hidden">
+                        <div class="h-full bg-blue-400 w-3/4"></div>
                     </div>
                 </div>
 
-                <div class="absolute bottom-8 right-8 z-30 text-right">
-                    <p class="text-[10px] text-blue-400 font-tech">LATENCY: <span id="ping">24</span>ms</p>
-                    <p class="text-[10px] text-blue-400 font-tech">ENGINE: MISTRAL_7B_GEN</p>
+                <div class="absolute bottom-40 right-20 box-loc p-4 rounded-xl bg-yellow-950/20 backdrop-blur-sm">
+                    <p class="text-[8px] font-bold uppercase">Location_Tag</p>
+                    <p class="font-tech text-xs mt-1">SECTOR_B_ASSEMBLY</p>
+                </div>
+
+                <div id="hazard-alert" class="hidden absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                    <div class="box-hazard p-12 rounded-3xl text-center bg-black/40 backdrop-blur-md">
+                        <p class="font-tech text-4xl mb-4">HAZARD_DETECTED</p>
+                        <p class="text-xs uppercase tracking-[0.4em] opacity-80">Immediate Personnel Proximity Alert</p>
+                    </div>
                 </div>
             </div>
-            
-            <div class="flex justify-between items-center p-4 glass-panel rounded-lg">
-                <button onclick="toggleDanger()" class="bg-red-600/20 border border-red-600 text-red-500 px-6 py-2 rounded font-bold hover:bg-red-600 hover:text-white transition">
-                    SIMULAR RIESGO CRÍTICO
+
+            <div class="flex justify-between items-center glass p-6 rounded-3xl border border-white/5 shadow-xl">
+                <div>
+                    <p class="font-tech text-[10px] text-blue-400">Cognitive AI Status</p>
+                    <p class="text-xs text-slate-400 mt-1">Predicting operational risks based on spatial telemetry...</p>
+                </div>
+                <button onclick="triggerHazard()" class="bg-red-600/10 border border-red-600/50 text-red-500 px-10 py-3 rounded-2xl font-tech text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-lg active:scale-95">
+                    TEST_HAZARD_PROTOCOL
                 </button>
-                <p class="text-gray-500 text-sm">Active el riesgo para observar la respuesta del ledger y el cambio cromático.</p>
             </div>
         </div>
 
-        <div class="lg:col-span-4 space-y-6">
-            <div class="glass-panel p-6 rounded-xl">
-                <h2 class="font-tech text-sm text-blue-400 mb-6 flex items-center">
-                    <span class="w-2 h-2 bg-blue-500 mr-2 animate-pulse"></span> IMMUTABLE SAFETY LEDGER
-                </h2>
-                <div id="blockchain-feed" class="space-y-4 h-[450px] overflow-y-auto pr-2 custom-scrollbar">
-                    </div>
+        <div class="col-span-4 flex flex-col h-full">
+            <div class="flex items-center justify-between mb-6 px-2">
+                <h3 class="font-tech text-[10px] text-slate-400 tracking-[0.3em] uppercase">■ Safety Blockchain Ledger</h3>
+                <span class="text-[8px] text-blue-500 font-bold px-2 py-1 bg-blue-500/10 rounded">ENCRYPTED_LINK</span>
             </div>
-
-            <div class="glass-panel p-6 rounded-xl border-t-2 border-emerald-500">
-                <h3 class="text-emerald-400 font-bold mb-2">Operational Analytics</h3>
-                <p class="text-xs text-gray-400 leading-relaxed italic">"El agente autónomo está procesando frames en el Edge. La integridad de los datos está asegurada mediante SHA-256."</p>
-            </div>
+            
+            <div id="ledger-stream" class="flex-1 overflow-y-auto space-y-4 pr-3 custom-scrollbar">
+                </div>
         </div>
     </main>
 
     <script>
-        const video = document.getElementById('webcam');
-        const shield = document.getElementById('ar-shield');
-        const statusBadge = document.getElementById('status-badge');
-        const ledger = document.getElementById('blockchain-feed');
-        const ping = document.getElementById('ping');
+        let currentOperator = "";
+        const ledgerContainer = document.getElementById('ledger-stream');
+        const videoElement = document.getElementById('core-feed');
+        const alertUI = document.getElementById('hazard-alert');
 
-        // Inicializar Cámara
-        async function initCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-            } catch (err) {
-                console.error("Error accessing camera:", err);
+        function initializeCore() {
+            const idInput = document.getElementById('operator-id').value;
+            if(idInput.length >= 4) {
+                currentOperator = idInput.toUpperCase();
+                document.getElementById('auth-layer').classList.add('hidden');
+                document.getElementById('active-user').innerText = currentOperator;
+                
+                // Start Camera and Genesis Block
+                startCameraFeed();
+                pushToLedger('GENESIS_AUTHENTICATION');
+            } else {
+                alert("ACCESS DENIED: Enter valid Operator credentials.");
             }
         }
 
-        function createBlock(type) {
-            const hash = Array.from({length: 40}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        async function startCameraFeed() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                videoElement.srcObject = stream;
+            } catch (err) {
+                console.error("Camera access restricted. Using tactical simulation mode.");
+            }
+        }
+
+        function pushToLedger(eventType) {
+            const isCritical = eventType.includes('HAZARD');
+            const blockHash = Array.from({length: 32}, () => Math.floor(Math.random()*16).toString(16)).join('');
+            const timestamp = new Date().toLocaleTimeString();
+
             const block = document.createElement('div');
-            block.className = `p-3 rounded border-l-4 ${type === 'DANGER' ? 'border-red-500 bg-red-500/5' : 'border-blue-500 bg-blue-500/5'} mb-4 transition-all duration-500 animate-fade-in`;
-            block.innerHTML = `
-                <p class="text-[10px] font-tech ${type === 'DANGER' ? 'text-red-400' : 'text-blue-400'}">${type}_LOG_EVENT</p>
-                <p class="text-[9px] text-gray-500 truncate mt-1">HASH: ${hash}</p>
-                <p class="text-[8px] text-gray-600 font-mono">${new Date().toLocaleTimeString()}</p>
-            `;
-            ledger.prepend(block);
-        }
-
-        function toggleDanger() {
-            shield.classList.add('shield-danger');
-            statusBadge.innerText = "● ALERT: HIGH_RISK_DETECTED";
-            statusBadge.classList.replace('border-emerald-500', 'border-red-500');
-            statusBadge.classList.replace('text-emerald-400', 'text-red-400');
-            createBlock('DANGER');
+            block.className = `p-5 rounded-2xl transition-all duration-500 border border-white/5 animate-in slide-in-from-right ${isCritical ? 'ledger-card-danger' : 'ledger-card'}`;
             
-            setTimeout(() => {
-                shield.classList.remove('shield-danger');
-                statusBadge.innerText = "● SYSTEM_READY: MONITORING";
-                statusBadge.classList.replace('border-red-500', 'border-emerald-500');
-                statusBadge.classList.replace('text-red-400', 'text-emerald-400');
-            }, 3000);
+            block.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <p class="font-tech text-[10px] ${isCritical ? 'text-red-500' : 'text-blue-400'}">${eventType}</p>
+                    <span class="text-[8px] text-slate-600 font-bold tracking-tighter">${timestamp}</span>
+                </div>
+                <p class="text-[9px] text-slate-500 break-all font-mono opacity-50">SHA-256: ${blockHash}</p>
+                <div class="flex justify-between mt-4 items-center">
+                    <span class="text-[7px] text-slate-400 uppercase tracking-widest">Verified by ${currentOperator}</span>
+                    <div class="w-1.5 h-1.5 rounded-full ${isCritical ? 'bg-red-500' : 'bg-blue-500'}"></div>
+                </div>
+            `;
+            ledgerContainer.prepend(block);
         }
 
-        // Simulación de latencia real
-        setInterval(() => {
-            ping.innerText = Math.floor(Math.random() * (45 - 22) + 22);
-        }, 2000);
+        function triggerHazard() {
+            alertUI.classList.remove('hidden');
+            pushToLedger('CRITICAL_HAZARD_LOG');
+            
+            // Auto-clear after 3.5 seconds
+            setTimeout(() => {
+                alertUI.classList.add('hidden');
+                pushToLedger('AREA_RESTORED_SAFE');
+            }, 3500);
+        }
 
-        initCamera();
-        createBlock('INITIALIZATION');
+        // Live Clock
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }, 1000);
     </script>
 </body>
 </html>
