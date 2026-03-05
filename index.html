@@ -3,229 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IWCORE™ | Workforce Safety & SST</title>
+    <title>IWCORE™ | Cyber-Security SST</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --blue: #3b82f6; --gold: #fbbf24; --red: #ef4444; --safe: #10b981; --bg: #020617; }
-        body { background: var(--bg); color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .font-tech { font-family: 'Orbitron', sans-serif; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        :root { --k-blue: #4a90e2; --k-red: #ff4d4d; --k-gold: #fbbf24; --k-dark: #0a0c10; }
+        body { background-color: var(--k-dark); color: white; font-family: 'Noto Sans KR', sans-serif; overflow: hidden; }
         
-        /* Tactical HUD Colors */
-        .hud-obj { border: 2px solid var(--blue); color: var(--blue); }
-        .hud-zone { border: 2px solid var(--gold); color: var(--gold); }
-        .hud-danger { border: 3px solid var(--red); box-shadow: 0 0 20px var(--red); animation: pulse 1s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .k-glass { 
+            background: rgba(22, 27, 34, 0.8); 
+            backdrop-filter: blur(25px); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 35px;
+        }
 
-        .section { display: none; height: 100%; animation: fadeIn 0.4s ease; }
+        .k-input {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .k-input:focus { border-color: var(--k-blue); outline: none; background: rgba(0,0,0,0.6); }
+
+        /* Password Strength Meter */
+        .strength-bar { height: 4px; border-radius: 2px; transition: all 0.3s ease; width: 0%; margin-top: 8px; }
+        .strength-weak { background-color: var(--k-red); width: 33%; }
+        .strength-mid { background-color: var(--k-gold); width: 66%; }
+        .strength-high { background-color: var(--k-blue); width: 100%; box-shadow: 0 0 10px var(--k-blue); }
+
+        .error-msg { color: var(--k-red); font-size: 11px; margin-top: 10px; display: none; font-weight: bold; }
+
+        .btn-k-primary {
+            background: linear-gradient(135deg, #4a90e2, #357abd);
+            border-radius: 18px; font-weight: 700; transition: all 0.2s;
+        }
+        .btn-k-primary:active { transform: scale(0.98); }
+
+        .section { display: none; height: 100%; animation: slideUp 0.5s ease; }
         .section.active { display: flex; flex-direction: column; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="h-screen flex flex-col md:flex-row">
+<body>
 
-    <div id="reg-screen" class="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-6">
-        <div class="glass p-10 rounded-[2.5rem] w-full max-w-md text-center shadow-2xl border-blue-500/20">
-            <h1 class="font-tech text-3xl text-blue-500 mb-2">IWCORE</h1>
-            <p class="text-[9px] text-gray-500 tracking-[0.5em] mb-10 uppercase">SST Integration Protocol</p>
-            <input type="text" id="reg-name" placeholder="FULL NAME" class="w-full bg-black/50 border border-slate-800 p-4 rounded-xl mb-4 focus:border-blue-500 outline-none text-sm text-center">
-            <input type="text" id="reg-id" placeholder="WORKER_ID" class="w-full bg-black/50 border border-slate-800 p-4 rounded-xl mb-8 focus:border-blue-500 outline-none text-sm text-center">
-            <button onclick="handleReg()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-tech tracking-widest transition-all shadow-lg shadow-blue-900/40">REGISTER & SIGN IN</button>
+    <div id="auth-overlay" class="fixed inset-0 z-50 bg-[#06080a] flex items-center justify-center p-4 overflow-y-auto">
+        
+        <div id="login-panel" class="k-glass p-10 w-full max-w-md text-center">
+            <h1 class="font-bold text-4xl mb-2 tracking-tighter italic">IWCORE<span class="text-blue-500">™</span></h1>
+            <p class="text-[9px] opacity-40 mb-10 tracking-[0.4em] uppercase">Security Access Portal</p>
+            
+            <div class="space-y-4">
+                <input type="text" id="login-user" placeholder="Email or Worker ID" class="k-input w-full p-4 text-sm">
+                <input type="password" id="login-pass" placeholder="Password" class="k-input w-full p-4 text-sm">
+            </div>
+
+            <p id="login-error" class="error-msg">⚠️ Account not found or invalid password.</p>
+
+            <button onclick="handleLogin()" class="btn-k-primary w-full py-4 mt-8 text-xs tracking-widest">VERIFY & ENTER</button>
+            
+            <p class="mt-8 text-[11px] opacity-40">
+                Unauthorized personnel? 
+                <button onclick="switchView('reg')" class="text-blue-500 font-bold hover:underline ml-1">REGISTER ACCOUNT</button>
+            </p>
+        </div>
+
+        <div id="reg-panel" class="k-glass p-10 w-full max-w-md hidden">
+            <h2 class="text-xl font-bold mb-6 text-center">Personnel Onboarding</h2>
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="reg-first" placeholder="First Name" class="k-input w-full p-4 text-xs">
+                    <input type="text" id="reg-last" placeholder="Last Name" class="k-input w-full p-4 text-xs">
+                </div>
+                <input type="email" id="reg-email" placeholder="Email / ID" class="k-input w-full p-4 text-xs">
+                
+                <div class="relative">
+                    <input type="password" id="reg-pass" oninput="checkStrength(this.value)" placeholder="Create Password (min 8 digits)" class="k-input w-full p-4 text-xs">
+                    <div id="strength-meter" class="strength-bar"></div>
+                    <p id="strength-text" class="text-[9px] mt-1 opacity-50 uppercase tracking-tighter">Security Level: None</p>
+                </div>
+
+                <button onclick="handleRegister()" class="btn-k-primary w-full py-4 mt-4 text-xs tracking-widest">CREATE ENCRYPTED PROFILE</button>
+                <button onclick="switchView('login')" class="w-full text-[10px] opacity-30 mt-4 uppercase">Return to Login</button>
+            </div>
         </div>
     </div>
 
-    <nav id="nav-bar" class="hidden w-full md:w-24 bg-black/80 md:flex flex-row md:flex-col items-center justify-around md:justify-start py-8 gap-10 border-r border-white/5 z-50">
-        <button onclick="nav('profile')" class="text-2xl hover:scale-110 transition">👤</button>
-        <button onclick="nav('camera')" class="text-2xl hover:scale-110 transition">📷</button>
-        <button onclick="nav('agent')" class="text-2xl hover:scale-110 transition">🤖</button>
+    <nav id="nav-bar" class="hidden w-full md:w-24 bg-black/80 md:flex flex-col items-center py-10 gap-10 border-r border-white/5 z-40">
+        <button onclick="nav('profile')" class="text-2xl opacity-40 hover:opacity-100 transition">👤</button>
+        <button onclick="nav('camera')" class="text-2xl opacity-40 hover:opacity-100 transition">📷</button>
     </nav>
 
-    <main id="main-ui" class="hidden flex-1 p-6 md:p-10 overflow-hidden">
-        
+    <main id="main-ui" class="hidden flex-1 p-8 md:p-16">
         <section id="profile" class="section active">
-            <header class="mb-8">
-                <p class="text-[10px] text-blue-500 font-tech">WORKER_PROFILE</p>
-                <h2 id="display-name" class="text-3xl font-bold">---</h2>
-            </header>
-
-            <div class="grid md:grid-cols-2 gap-8">
-                <div class="glass p-6 rounded-3xl">
-                    <h3 class="font-tech text-xs mb-6 text-slate-400">PPE CHECKLIST (SAFETY CONTROL)</h3>
-                    <div class="space-y-4" id="ppe-list">
-                        </div>
-                </div>
-
-                <div class="glass p-6 rounded-3xl flex flex-col justify-between">
-                    <div>
-                        <h3 class="font-tech text-xs mb-4 text-slate-400">OPERATIONAL MODE</h3>
-                        <div class="flex gap-4">
-                            <button onclick="setHeight('LOW')" id="btn-low" class="flex-1 py-3 rounded-xl border border-blue-500 bg-blue-500/20 text-xs font-bold">GROUND LEVEL</button>
-                            <button onclick="setHeight('HIGH')" id="btn-high" class="flex-1 py-3 rounded-xl border border-slate-700 text-xs font-bold">HIGH ALTITUDE</button>
-                        </div>
-                    </div>
-                    <div class="mt-6 p-4 rounded-2xl bg-white/5 border border-white/5">
-                        <p class="text-[10px] text-slate-500 uppercase">Current Safety Status</p>
-                        <p id="safety-status" class="text-xl font-bold text-safe">READY_FOR_DUTY</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="camera" class="section">
-            <div id="cam-blocker" class="absolute inset-0 z-50 glass flex flex-col items-center justify-center text-center p-10 hidden">
-                <p class="text-5xl mb-4">⚠️</p>
-                <h2 class="font-tech text-2xl text-red-500">SAFETY BLOCKADE</h2>
-                <p class="text-sm text-slate-400 mt-2 max-w-sm">High altitude mode requires <b>HARNESS</b> verification in your profile before activation.</p>
-                <button onclick="nav('profile')" class="mt-6 px-8 py-3 bg-red-600 rounded-full font-bold text-xs">GO TO PROFILE</button>
-            </div>
-
-            <div class="relative flex-1 rounded-[2.5rem] overflow-hidden bg-black border border-white/10">
-                <video id="feed" autoplay muted playsinline class="w-full h-full object-cover opacity-60"></video>
-                
-                <div class="absolute top-10 left-10 hud-obj p-3 bg-blue-500/10 rounded-xl backdrop-blur-md">
-                    <p class="text-[8px] font-bold">OBJECT_ID</p>
-                    <p class="font-tech text-xs">MACHINERY_A12</p>
-                </div>
-                <div class="absolute top-10 right-10 hud-zone p-3 bg-gold-500/10 rounded-xl backdrop-blur-md">
-                    <p class="text-[8px] font-bold">LOCATION_TAG</p>
-                    <p class="font-tech text-xs">SECTOR_4_HIGH</p>
-                </div>
-                
-                <div class="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 py-3 bg-black/80 rounded-full border border-white/20 text-center">
-                    <p class="text-xs italic"><span class="text-blue-500 font-bold">SST TIP:</span> Always maintain 3 points of contact when climbing.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="agent" class="section">
-            <div class="max-w-3xl mx-auto w-full bg-slate-900/50 p-10 rounded-[3rem] border border-white/5">
-                <div class="flex items-center gap-6 mb-8">
-                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg shadow-blue-900/40">🤖</div>
-                    <div>
-                        <h2 class="font-tech text-xl text-blue-400">SAFEBOT AGENT</h2>
-                        <p class="text-xs text-slate-500 tracking-widest">AUTONOMOUS HEALTH & SAFETY MENTOR</p>
-                    </div>
-                </div>
-                <div class="space-y-6 text-slate-300 leading-relaxed">
-                    <p class="bg-white/5 p-6 rounded-2xl border-l-4 border-blue-500">
-                        "Hello, I am your SafeBot. Based on your current assignment in <b>Sector 4</b>, I have updated your training modules. Your <b>Family Health Insurance (SCTR)</b> is active and covers pediatric care for your children while you are on duty."
-                    </p>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="p-4 bg-black/40 rounded-2xl border border-white/5">
-                            <p class="text-[10px] text-blue-500 font-bold mb-1">HEALTH TIPS</p>
-                            <p class="text-xs">Avoid using headphones; ambient awareness is life-saving.</p>
-                        </div>
-                        <div class="p-4 bg-black/40 rounded-2xl border border-white/5">
-                            <p class="text-[10px] text-gold-500 font-bold mb-1">FAMILY BENEFIT</p>
-                            <p class="text-xs">Access safe-housing subsidies for qualified workers.</p>
-                        </div>
-                    </div>
-                    <button class="w-full bg-blue-600 py-4 rounded-2xl font-tech text-xs tracking-widest">START FALL PREVENTION TRAINING</button>
-                </div>
+            <p class="text-blue-500 text-[10px] font-bold tracking-[0.3em] uppercase mb-2">Authenticated Profile</p>
+            <h2 id="display-name" class="text-5xl font-bold tracking-tighter mb-10">---</h2>
+            <div class="k-glass p-10 max-w-2xl">
+                <p class="text-sm opacity-60 leading-relaxed">Your account has been detected and verified in the **IWCORE™ Security Ledger**. All safety measures and PPE detections will be linked to your unique ID.</p>
+                <button onclick="location.reload()" class="mt-8 text-xs text-red-500 font-bold uppercase tracking-widest">Log Out & Terminate Session</button>
             </div>
         </section>
     </main>
 
-    <div id="modal" class="fixed inset-0 z-[200] bg-black/90 hidden flex items-center justify-center p-6 backdrop-blur-sm">
-        <div class="glass p-10 rounded-[2.5rem] max-w-md w-full border-blue-500/20">
-            <h3 id="modal-title" class="font-tech text-xl text-blue-400 mb-4">---</h3>
-            <div class="space-y-4 text-sm text-slate-300">
-                <p id="modal-benefit"><b class="text-white">Benefits:</b> ---</p>
-                <p id="modal-usage"><b class="text-white">Proper Use:</b> ---</p>
-                <p id="modal-risk" class="text-red-400 font-bold uppercase text-[10px]">Avoid mobile phone use while equipped.</p>
-            </div>
-            <button onclick="closeModal()" class="mt-8 w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-bold transition-all">CLOSE MANUAL</button>
-        </div>
-    </div>
-
     <script>
-        const worker = { name: "", id: "", height: "LOW", ppe: {
-            "Helmet": { status: false, benefit: "Prevents traumatic brain injury from falling objects.", usage: "Adjust chin strap so only two fingers fit between strap and chin." },
-            "Gloves": { status: false, benefit: "Protects against abrasions and electric shocks.", usage: "Inspect for holes or worn-out patches before every shift." },
-            "Harness": { status: false, benefit: "Stops free-falls. Essential for work over 1.8m.", usage: "Ensure D-ring is centered between shoulder blades." }
-        }};
+        // Simulador de Base de Datos Local
+        let db = [
+            { id: "admin", email: "admin@iwcore.com", pass: "Admin123!", name: "SYSTEM ADMINISTRATOR" }
+        ];
 
-        function handleReg() {
-            const name = document.getElementById('reg-name').value;
-            const id = document.getElementById('reg-id').value;
-            if(name.length > 3 && id.length > 3) {
-                worker.name = name; worker.id = id;
-                document.getElementById('reg-screen').classList.add('hidden');
-                document.getElementById('nav-bar').classList.remove('hidden');
-                document.getElementById('main-ui').classList.remove('hidden');
-                document.getElementById('display-name').innerText = name.toUpperCase();
-                renderPPE();
-            }
+        function switchView(view) {
+            document.getElementById('login-panel').classList.toggle('hidden', view === 'reg');
+            document.getElementById('reg-panel').classList.toggle('hidden', view === 'login');
+            document.getElementById('login-error').style.display = 'none';
         }
 
-        function renderPPE() {
-            const list = document.getElementById('ppe-list');
-            list.innerHTML = "";
-            Object.keys(worker.ppe).forEach(item => {
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center p-4 bg-white/5 rounded-2xl border border-white/5";
-                div.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <input type="checkbox" onchange="togglePPE('${item}')" ${worker.ppe[item].status ? 'checked' : ''} class="w-5 h-5 accent-blue-500">
-                        <span class="text-sm font-semibold">${item}</span>
-                    </div>
-                    <button onclick="showManual('${item}')" class="text-[10px] text-blue-400 font-bold hover:underline">GUIDE</button>
-                `;
-                list.appendChild(div);
-            });
-            checkSafety();
+        function checkStrength(pass) {
+            const meter = document.getElementById('strength-meter');
+            const text = document.getElementById('strength-text');
+            let strength = 0;
+
+            if (pass.length >= 8) strength++;
+            if (/[0-9]/.test(pass)) strength++;
+            if (/[^A-Za-z0-9]/.test(pass)) strength++;
+
+            meter.className = "strength-bar"; // Reset
+            if (strength === 0) { text.innerText = "Security Level: Too Short"; }
+            else if (strength === 1) { meter.classList.add('strength-weak'); text.innerText = "Security Level: Weak"; }
+            else if (strength === 2) { meter.classList.add('strength-mid'); text.innerText = "Security Level: Medium"; }
+            else if (strength === 3) { meter.classList.add('strength-high'); text.innerText = "Security Level: High (Secure)"; }
         }
 
-        function togglePPE(item) {
-            worker.ppe[item].status = !worker.ppe[item].status;
-            checkSafety();
-        }
+        function handleRegister() {
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-pass').value;
+            const name = document.getElementById('reg-first').value + " " + document.getElementById('reg-last').value;
 
-        function setHeight(mode) {
-            worker.height = mode;
-            document.getElementById('btn-low').className = mode === 'LOW' ? 'flex-1 py-3 rounded-xl border border-blue-500 bg-blue-500/20 text-xs font-bold' : 'flex-1 py-3 rounded-xl border border-slate-700 text-xs font-bold';
-            document.getElementById('btn-high').className = mode === 'HIGH' ? 'flex-1 py-3 rounded-xl border border-blue-500 bg-blue-500/20 text-xs font-bold' : 'flex-1 py-3 rounded-xl border border-slate-700 text-xs font-bold';
-            checkSafety();
-        }
-
-        function checkSafety() {
-            const statusLabel = document.getElementById('safety-status');
-            const blocker = document.getElementById('cam-blocker');
-            
-            const isHighUnsafe = worker.height === 'HIGH' && !worker.ppe['Harness'].status;
-            
-            if (isHighUnsafe) {
-                statusLabel.innerText = "CRITICAL_HAZARD_BLOCKED";
-                statusLabel.className = "text-xl font-bold text-red-500";
-                blocker.classList.remove('hidden');
+            if (email && pass.length >= 8 && name) {
+                db.push({ id: email, email: email, pass: pass, name: name.toUpperCase() });
+                alert("Account created successfully. You can now login.");
+                switchView('login');
             } else {
-                statusLabel.innerText = "READY_FOR_DUTY";
-                statusLabel.className = "text-xl font-bold text-emerald-500";
-                blocker.classList.add('hidden');
+                alert("Please complete all fields. Password must be at least 8 digits.");
             }
         }
 
-        function showManual(item) {
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal-title').innerText = item.toUpperCase();
-            document.getElementById('modal-benefit').innerHTML = `<b class="text-white">Benefits:</b> ${worker.ppe[item].benefit}`;
-            document.getElementById('modal-usage').innerHTML = `<b class="text-white">Proper Use:</b> ${worker.ppe[item].usage}`;
+        function handleLogin() {
+            const userIn = document.getElementById('login-user').value;
+            const passIn = document.getElementById('login-pass').value;
+            const errorLabel = document.getElementById('login-error');
+
+            const foundUser = db.find(u => u.id === userIn || u.email === userIn);
+
+            if (foundUser) {
+                if (foundUser.pass === passIn) {
+                    enterApp(foundUser.name);
+                } else {
+                    errorLabel.innerText = "⚠️ Incorrect password. Please try again.";
+                    errorLabel.style.display = "block";
+                }
+            } else {
+                errorLabel.innerText = "⚠️ Account not found. Would you like to register?";
+                errorLabel.style.display = "block";
+            }
         }
 
-        function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+        function enterApp(name) {
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('nav-bar').classList.remove('hidden');
+            document.getElementById('main-ui').classList.remove('hidden');
+            document.getElementById('display-name').innerText = name;
+        }
 
         function nav(id) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'camera') startCam();
-        }
-
-        async function startCam() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({video: true});
-                document.getElementById('feed').srcObject = stream;
-            } catch(e) {}
         }
     </script>
 </body>
